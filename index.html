@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我的个人主页</title>
+  <style>
+    /* ===== 主题变量（亮色 / 暗色） ===== */
+    :root {
+      color-scheme: light;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --card-bg: #ffffff;
+      --card-border: rgba(0, 0, 0, 0.04);
+      --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      --card-shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.12);
+      --avatar-border: #ffffff;
+      --logo-bg: #f3f4f6;
+      --arrow: #9ca3af;
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --card-bg: rgba(31, 41, 55, 0.72);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      --card-shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.55);
+      --avatar-border: #374151;
+      --logo-bg: #374151;
+      --arrow: #6b7280;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Microsoft YaHei", sans-serif;
+      color: var(--text-primary);
+    }
+
+    /* 双层渐变背景：通过 opacity 交叉淡入淡出，实现柔和过渡 */
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      transition: opacity 0.45s ease;
+    }
+
+    body::before {
+      background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    }
+
+    body::after {
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      opacity: 0;
+    }
+
+    html[data-theme="dark"] body::after {
+      opacity: 1;
+    }
+
+    .profile {
+      text-align: center;
+      max-width: 480px;
+      width: 100%;
+    }
+
+    /* 头像 */
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid var(--avatar-border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      margin-bottom: 1.25rem;
+      transition: border-color 0.35s ease;
+    }
+
+    .name {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.4rem;
+      transition: color 0.35s ease;
+    }
+
+    .bio {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.25rem;
+      transition: color 0.35s ease;
+    }
+
+    /* 分组分隔标题（两侧线段） */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      margin: 0 0 1.5rem;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
+      transition: color 0.35s ease;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(
+        to right,
+        transparent,
+        var(--text-secondary)
+      );
+      opacity: 0.45;
+    }
+
+    .divider::after {
+      background: linear-gradient(
+        to left,
+        transparent,
+        var(--text-secondary)
+      );
+    }
+
+    /* 导航按钮列表 */
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .link-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.85rem 1.25rem;
+      background: var(--card-bg);
+      border-radius: 16px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-size: 1.05rem;
+      font-weight: 600;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: background-color 0.35s ease, color 0.35s ease,
+        border-color 0.35s ease, box-shadow 0.35s ease,
+        transform 0.2s ease;
+    }
+
+    .link-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .link-card:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* logo 图片适配：固定尺寸 + object-fit 保持比例裁切 */
+    .link-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--logo-bg);
+      transition: background-color 0.35s ease;
+    }
+
+    .link-text {
+      flex: 1;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .link-tip {
+      color: var(--text-secondary);
+      font-weight: 400;
+      font-size: 0.9rem;
+      transition: color 0.35s ease;
+    }
+
+    .link-arrow {
+      color: var(--arrow);
+      font-size: 1.1rem;
+      transition: color 0.35s ease, transform 0.2s ease;
+    }
+
+    .link-card:hover .link-arrow {
+      transform: translateX(4px);
+    }
+
+    /* 可点击复制卡片（QQ） */
+    .copy-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.85rem 1.25rem;
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      box-shadow: var(--card-shadow);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--text-primary);
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      text-align: left;
+      width: 100%;
+      font-family: inherit;
+      transition: background-color 0.35s ease, color 0.35s ease,
+        border-color 0.35s ease, box-shadow 0.35s ease,
+        transform 0.2s ease;
+    }
+
+    .copy-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .copy-card:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* 隐藏的卡片（微信板块）：确保 hidden 属性优先生效，恢复时删掉 hidden 即可 */
+    .copy-card[hidden] {
+      display: none;
+    }
+
+    .link-text {
+      flex: 1;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* 复制成功提示（toast） */
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--card-bg);
+      color: var(--text-primary);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--card-shadow-hover);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 0.7rem 1.4rem;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* 亮暗切换按钮 */
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      color: var(--text-primary);
+      font-size: 1.25rem;
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: background-color 0.35s ease, color 0.35s ease,
+        border-color 0.35s ease, box-shadow 0.35s ease,
+        transform 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-2px) scale(1.06);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .theme-toggle:active {
+      transform: scale(0.94);
+    }
+
+    /* 页脚："未完待续..." */
+    .footer-note {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      margin-top: 2.25rem;
+      padding-top: 1.4rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.35em;
+      color: var(--text-secondary);
+      transition: color 0.35s ease;
+    }
+
+    /* 两侧装饰线 */
+    .footer-note::before,
+    .footer-note::after {
+      content: "";
+      width: 36px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--text-secondary));
+      opacity: 0.45;
+    }
+
+    .footer-note::after {
+      background: linear-gradient(to left, transparent, var(--text-secondary));
+    }
+
+    /* 省略号呼吸动画 */
+    .footer-note .dots::after {
+      content: "···";
+      display: inline-block;
+      letter-spacing: 0.15em;
+      animation: dotsPulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes dotsPulse {
+      0%,
+      100% {
+        opacity: 0.2;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+  </style>
+  <!-- 防闪烁：渲染前立即应用主题（每次访问始终默认暗色） -->
+  <script>
+    (function () {
+      document.documentElement.setAttribute("data-theme", "dark");
+    })();
+  </script>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle" aria-label="切换亮暗模式">🌙</button>
+
+  <div class="profile">
+    <img class="avatar" src="images/my.jpeg" alt="头像" />
+    <div class="name">Neko.aic</div>
+    <div class="bio">欢迎来到我的主页，点击下方链接跳转至我的相关页面～</div>
+
+    <div class="divider">国内平台</div>
+
+    <div class="links">
+      <a class="link-card" href="https://www.douyin.com/user/MS4wLjABAAAARzI5zA8HppyQEqFWZ6jk2n295kbNvP3dYa8tt3uHleHz--0yG9hCHZXinzWkqEzu?from_tab_name=main" target="_blank" rel="noopener">
+        <img class="link-logo" src="images/douyin.jpg" alt="抖音" />
+        <span class="link-text">抖音 <span class="link-tip">点我跳转</span></span>
+        <span class="link-arrow">→</span>
+      </a>
+
+      <a class="link-card" href="https://www.kuaishou.com/profile/3xrj5nqrxkmyn9w?source=PROFILE" target="_blank" rel="noopener">
+        <img class="link-logo" src="images/kuaishou.jpg" alt="快手" />
+        <span class="link-text">快手 <span class="link-tip">点我跳转</span></span>
+        <span class="link-arrow">→</span>
+      </a>
+
+      <a class="link-card" href="https://space.bilibili.com/3546643035065173" target="_blank" rel="noopener">
+        <img class="link-logo" src="images/bilibili.jpg" alt="哔哩哔哩" />
+        <span class="link-text">哔哩哔哩 <span class="link-tip">点我跳转</span></span>
+        <span class="link-arrow">→</span>
+      </a>
+
+      <a class="link-card" href="https://www.xiaohongshu.com/user/profile/68cd4f6d00000000210276a3" target="_blank" rel="noopener">
+        <img class="link-logo" src="images/xiaohongshu.jpg" alt="小红书" />
+        <span class="link-text">小红书 <span class="link-tip">点我跳转</span></span>
+        <span class="link-arrow">→</span>
+      </a>
+
+      <button class="copy-card" id="qqCard" type="button" aria-label="复制QQ号">
+        <img class="link-logo" src="images/QQ.jpg" alt="QQ" />
+        <span class="link-text">QQ <span class="link-tip">点击复制：2332492709</span></span>
+        <span class="link-arrow">Copy!</span>
+      </button>
+
+      <!-- 微信板块已隐藏：如需恢复，删除下面按钮上的 hidden 属性即可 -->
+      <button class="copy-card" id="wechatCard" type="button" aria-label="复制微信号" hidden>
+        <img class="link-logo" src="images/weixin.jpg" alt="微信" />
+        <span class="link-text">微信 <span class="link-tip">点击复制：████████</span></span>
+        <span class="link-arrow">Copy!</span>
+      </button>
+    </div>
+
+    <!-- 页脚 -->
+    <div class="footer-note">
+      未完待续<span class="dots"></span>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const toggle = document.getElementById("themeToggle");
+    const root = document.documentElement;
+
+    function syncIcon() {
+      toggle.textContent = root.getAttribute("data-theme") === "dark" ? "☀️" : "🌙";
+    }
+    syncIcon();
+
+    toggle.addEventListener("click", () => {
+      const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      localStorage.setItem("theme", next);
+      syncIcon();
+    });
+
+    // 一键复制（QQ / 微信通用）
+    const toast = document.getElementById("toast");
+    let toastTimer = null;
+
+    function copyText(text) {
+      return new Promise((resolve) => {
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(resolve).catch(() => {
+            fallbackCopy(text);
+            resolve();
+          });
+        } else {
+          fallbackCopy(text);
+          resolve();
+        }
+      });
+    }
+
+    // 兼容不支持 clipboard API 的环境：降级方案
+    function fallbackCopy(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2000);
+    }
+
+    document.getElementById("qqCard").addEventListener("click", async () => {
+      await copyText("2332492709");
+      showToast("✅ 已复制 QQ 号：2332492709");
+    });
+
+    document.getElementById("wechatCard").addEventListener("click", async () => {
+      await copyText("██████");
+      showToast("✅ 已复制微信号：██████");
+    });
+  </script>
+</body>
+</html>
